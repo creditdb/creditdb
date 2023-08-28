@@ -68,6 +68,21 @@ const get = async (req: Request, res: Response) => {
   }
 };
 
+
+
+const del= async (req: Request, res: Response) => {
+  try {
+    const { key } = req.body;
+    logger.info(`delete key: ${key}`);
+    await service.deleteLine(key);
+    res.send({ status: "OK"});
+  } catch (err:any) {
+    logger.error(err.message);
+    res.statusCode = 404;
+    res.send({ status: "ERROR", error: err.message });
+  }
+};
+
 const getAll = async (req: Request, res: Response) => {
   try {
     const result = await service.getAllLines();
@@ -149,6 +164,7 @@ const close = async (req: Request, res: Response) => {
 const Controller = {
   set,
   get,
+  del,
   page,
   ping,
   getAll,

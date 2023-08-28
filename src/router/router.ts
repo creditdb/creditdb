@@ -8,6 +8,7 @@ export default (): express.Router => {
   router.get("/ping", controller.ping);
   router.post("/set", controller.set);
   router.get("/get", controller.get);
+  router.delete("/delete", controller.del);
   router.get("/getall", controller.getAll);
   router.post("/page", controller.page);
   router.get("/page", controller.getPage);
