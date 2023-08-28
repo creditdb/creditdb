@@ -12,12 +12,7 @@ import jsonParsingMiddleware from "../controller/middleware";
 const port: number = config.get("port");
 const app = express();
 
-app.use(
-  cors({
-    origin: "http://localhost:" + port, // Replace with your allowed origin(s)
-    methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods
-  })
-);
+app.use(cors());
 app.use(compression());
 app.use(bodyParser.json());
 app.use(jsonParsingMiddleware);
