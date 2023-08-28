@@ -1,3 +1,5 @@
+//controller/controller.ts
+
 import { Request, Response } from "express";
 import logger from "../utils/logger";
 import Service from "../service/service";
@@ -30,12 +32,16 @@ class PageInput {
     this.page = page;
   }
 }
-const service = new Service(0);
 
-const set = async (req: Request, res: Response) => {
+const set = async (req: Request, res: Response, service: Service) => {
   try {
-    const { key, value } = req.body;
-
+    const { key, value, page } = req.body;
+    
+    const pageInput = new PageInput(page);
+    const pageErrors = await validate(pageInput);
+    if (pageErrors.length > 0) {
+      throw new Error("page input validation failed");
+    }
     const lineInput = new LineInput(key, value);
     const errors = await validate(lineInput);
     if (errors.length > 0) {
@@ -47,93 +53,92 @@ const set = async (req: Request, res: Response) => {
       Meta: {} as IMeta,
     };
     logger.info(`set key: ${key}, value: ${value}`);
-    res.send({ status: 200, ...(await service.setLine(line)) });
-  } catch (err:any) {
+    const pagenumber = Number(page)
+    res.send({ status: 200, ...(await service.setLine(pagenumber,line)) });
+  } catch (err: any) {
     logger.error(err.message);
     res.statusCode = 400;
     res.send({ status: "ERROR", error: err.message });
   }
 };
 
-const get = async (req: Request, res: Response) => {
+const get = async (req: Request, res: Response, service: Service) => {
   try {
-    const { key } = req.body;
+    const { key, page } = req.body;
+    const pageInput = new PageInput(page);
+    const pageErrors = await validate(pageInput);
+    if (pageErrors.length > 0) {
+      throw new Error("page input validation failed");
+    }
     logger.info(`get key: ${key}`);
-    const result = await service.getLine(key);
+    const pagenumber = Number(page)
+    const result = await service.getLine(pagenumber,key);
     res.send({ status: "OK", ...result });
-  } catch (err:any) {
+  } catch (err: any) {
     logger.error(err.message);
     res.statusCode = 404;
     res.send({ status: "ERROR", error: err.message });
   }
 };
 
-
-
-const del= async (req: Request, res: Response) => {
+const del = async (req: Request, res: Response, service: Service) => {
   try {
-    const { key } = req.body;
+    const { key, page } = req.body;
+    
+    const pageInput = new PageInput(page);
+    const pageErrors = await validate(pageInput);
+    if (pageErrors.length > 0) {
+      throw new Error("page input validation failed");
+    }
     logger.info(`delete key: ${key}`);
-    await service.deleteLine(key);
-    res.send({ status: "OK"});
-  } catch (err:any) {
+    const pagenumber = Number(page)
+    await service.deleteLine(pagenumber, key);
+    res.send({ status: "OK" });
+  } catch (err: any) {
     logger.error(err.message);
     res.statusCode = 404;
     res.send({ status: "ERROR", error: err.message });
   }
 };
 
-const getAll = async (req: Request, res: Response) => {
+const getAll = async (req: Request, res: Response, service: Service) => {
   try {
-    const result = await service.getAllLines();
-    const page = await service.getPage();
-    logger.info(`getAll page: ${page}`);
-    res.send({ status: "OK", page, result });
-  } catch (err:any) {
-    logger.error(err.message);
-    res.statusCode = 404;
-    res.send({ status: "ERROR", error: err.message });
-  }
-};
-
-const page = async (req: Request, res: Response) => {
-  try {
+    
     const { page } = req.body;
     const pageInput = new PageInput(page);
-    const errors = await validate(pageInput);
-    if (errors.length > 0) {
-      throw new Error("input validation failed");
+    const pageErrors = await validate(pageInput);
+    if (pageErrors.length > 0) {
+      throw new Error("page input validation failed");
     }
-    logger.info(`page: ${page}`);
-    await service.setPage(Number(page));
-    res.status(200).send({ status: "OK", page: page });
-  } catch (err:any) {
+    const pagenumber = Number(page)
+    const result = await service.getAllLines(pagenumber);
+    logger.info(`getAll page: ${page}`);
+    res.send({ status: "OK", pagenumber, result });
+  } catch (err: any) {
     logger.error(err.message);
-    res.status(400).send({ status: "ERROR", error: err.message });
+    res.statusCode = 404;
+    res.send({ status: "ERROR", error: err.message });
   }
 };
 
-const getPage = async (req: Request, res: Response) => {
-  try {
-    const page = await service.getPage();
-    logger.info(`getPage: ${page}`);
-    res.status(200).send({ status: "OK", page });
-  } catch (err:any) {
-    logger.error(err.message);
-    res.status(500).send({ status: "ERROR", error: err.message });
-  }
-};
 
-const flush = async (req: Request, res: Response) => {
+const flush = async (req: Request, res: Response, service: Service) => {
   try {
-    await service.flush();
-    const page = await service.getAllLines();
-    if (page.length > 0) {
+
+    const { page } = req.body;
+    const pageInput = new PageInput(page);
+    const pageErrors = await validate(pageInput);
+    if (pageErrors.length > 0) {
+      throw new Error("page input validation failed");
+    }
+    const pagenumber = Number(page)
+    await service.flush(page);
+    const fullpage = await service.getAllLines(pagenumber);
+    if (fullpage.length > 0) {
       throw new Error("page not flushed");
     }
-    const pagenumber = await service.getPage();
     logger.info(`flushed page: ${pagenumber}`);
-    res.status(200).send({ status: "OK", page, pagenumber });
+    res.status(200).send({ status: "OK", fullpage, pagenumber });
   } catch (err: any) {
     logger.error(err.message);
     res.status(500).send({ status: "ERROR", error: err.message });
@@ -142,19 +147,19 @@ const flush = async (req: Request, res: Response) => {
 
 const ping = async (req: Request, res: Response) => {
   logger.info(`pong`);
-  res.status(200).send({status: "OK", ping: "pong"});
+  res.status(200).send({ status: "OK", ping: "pong" });
 };
 
 const health = async (req: Request, res: Response) => {
   logger.info(`health`);
-  res.status(200).send({status: "OK"});
+  res.status(200).send({ status: "OK" });
 };
-const close = async (req: Request, res: Response) => {
+const close = async (req: Request, res: Response, service: Service) => {
   try {
     closeBook();
     res.send({ status: "OK" });
     serverManager.closeServer();
-  } catch (err:any) {
+  } catch (err: any) {
     logger.error(err.message);
     res.statusCode = 500;
     res.send({ status: "ERROR", error: err.message });
@@ -165,10 +170,8 @@ const Controller = {
   set,
   get,
   del,
-  page,
   ping,
   getAll,
-  getPage,
   flush,
   close,
   health,

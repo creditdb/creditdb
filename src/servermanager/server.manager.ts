@@ -1,3 +1,5 @@
+//servermanager/server.manager.ts
+
 import express from "express";
 import http from "http";
 import cors from "cors";
@@ -7,19 +9,27 @@ import config from "config";
 import logger from "../utils/logger";
 import { closeBook } from "../repo/repo";
 import router from "../router/router";
-import jsonParsingMiddleware from "../controller/middleware";
+import { jsonParsingMiddleware } from "../controller/middleware";
+import Service from "../service/service";
 
 const port: number = config.get("port");
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    credentials: true,
+  })
+);
+
+const service = new Service();
 app.use(compression());
 app.use(bodyParser.json());
 app.use(jsonParsingMiddleware);
 app.use(express.json());
 const server = http.createServer(app);
 
-app.use("/", router());
+app.use("/", router(service));
+
 const startServer = () => {
   try {
     server.listen(port, () => {

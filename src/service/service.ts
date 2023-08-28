@@ -17,19 +17,10 @@ export default class Service {
     }
   }
 
-  private page: number;
 
-  constructor(pageNum: number) {
-    this.page = pageNum;
-  }
-
-  async setPage(page: number): Promise<void> {
-    this.page = page;
-  }
-
-  async setLine(line: ILine): Promise<Omit<ILine, "Meta">> {
+  async setLine( page: number, line: ILine): Promise<Omit<ILine, "Meta">> {
     line.Meta = {} as IMeta;
-    const newPage = new PageRepo(this.page);
+    const newPage = new PageRepo(page);
 
     return this.performOperationAndUpdateBook(newPage, async () => {
       const pageArray = await newPage.get();
@@ -64,8 +55,8 @@ export default class Service {
     });
   }
 
-  async getLine(key: string): Promise<Omit<ILine, "Meta">> {
-    const newPage = new PageRepo(this.page);
+  async getLine(page:number, key: string): Promise<Omit<ILine, "Meta">> {
+    const newPage = new PageRepo(page);
     const pageArray = await newPage.get();
     return this.performOperationAndUpdateBook(newPage, async () => {
       const line = find(pageArray, { key: key });
@@ -76,8 +67,8 @@ export default class Service {
     });
   }
 
-  async deleteLine(key: string): Promise<void> {
-    const newPage = new PageRepo(this.page);
+  async deleteLine(page:number, key: string): Promise<void> {
+    const newPage = new PageRepo(page);
     try {
       const pageArray = await newPage.get();
 
@@ -95,8 +86,8 @@ export default class Service {
     }
   }
 
-  async getAllLines(): Promise<Omit<ILine, "Meta">[]> {
-    const newPage = new PageRepo(this.page);
+  async getAllLines(page:number): Promise<Omit<ILine, "Meta">[]> {
+    const newPage = new PageRepo(page);
     try {
       const pageArray = await newPage.get();
       return map(pageArray, (line) => {
@@ -109,12 +100,9 @@ export default class Service {
     }
   }
 
-  async getPage(): Promise<number> {
-    return Promise.resolve(this.page);
-  }
 
-  async flush(): Promise<void> {
-    const newPage = new PageRepo(this.page);
+  async flush(page: number): Promise<void> {
+    const newPage = new PageRepo(page);
     try {
       await newPage.updatePage([]);
     } catch (err) {

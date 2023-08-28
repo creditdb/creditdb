@@ -1,18 +1,17 @@
 import express from "express";
 import controller from "../controller/controller";
+import Service from "../service/service";
 
 const router = express.Router();
 
-export default (): express.Router => {
+export default (service:Service): express.Router => {
   router.get("/", controller.health);
   router.get("/ping", controller.ping);
-  router.post("/set", controller.set);
-  router.get("/get", controller.get);
-  router.delete("/delete", controller.del);
-  router.get("/getall", controller.getAll);
-  router.post("/page", controller.page);
-  router.get("/page", controller.getPage);
-  router.post("/flush", controller.flush);
-  router.post("/close", controller.close)
+  router.post("/set", (req, res)=>controller.set(req, res, service));
+  router.get("/get", (req, res)=>controller.get(req, res, service));
+  router.delete("/delete", (req, res)=>controller.del(req, res, service));
+  router.get("/getall", (req, res)=>controller.getAll(req, res, service));
+  router.delete("/flush", (req, res)=>controller.flush(req, res, service));
+  router.post("/close", (req, res)=>controller.close(req, res, service))
   return router;
 };
