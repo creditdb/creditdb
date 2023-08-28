@@ -1,6 +1,7 @@
 import { ILine, Book } from "../model/model";
 import * as fs from "fs";
 import { Mutex } from "async-mutex";
+import logger from "../utils/logger";
 
 export interface IPageRepo {
   get(): Promise<ILine[]>;
@@ -18,14 +19,20 @@ try {
     const writeByteArray = Buffer.from(JSON.stringify(book));
     fs.writeFileSync(filePath, writeByteArray);
   } else {
-    console.log("Error reading file", filePath);
+    logger.error("Error reading file", filePath);
   }
 }
 
 export const closeBook = () => {
-  const writeByteArray = Buffer.from(JSON.stringify(book));
-  fs.writeFileSync(filePath, writeByteArray);
-  console.log("Book closed");
+  try{
+    const writeByteArray = Buffer.from(JSON.stringify(book));
+    fs.writeFileSync(filePath, writeByteArray);
+    logger.info("Book closed");
+  }catch(err:any){
+    logger.info(err.message);
+    throw err;
+  }
+  
 };
 
 export class PageRepo implements IPageRepo {
@@ -40,7 +47,9 @@ export class PageRepo implements IPageRepo {
     const release = await this.mutex.acquire();
     try {
       const currentPage = book[this.id];
-      return Promise.resolve(currentPage ? currentPage.Line : []);
+      return currentPage ? currentPage.Line : [];
+    } catch (err) {
+      throw err;
     } finally {
       release();
     }
@@ -51,9 +60,10 @@ export class PageRepo implements IPageRepo {
     try {
       book[this.id] = book[this.id] || { Line: [] };
       book[this.id].Line = line;
+    } catch (err) {
+      throw err;
     } finally {
       release();
     }
-    return Promise.resolve();
   }
 }

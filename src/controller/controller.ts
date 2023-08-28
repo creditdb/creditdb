@@ -3,7 +3,7 @@ import logger from "../utils/logger";
 import Service from "../service/service";
 import { ILine, IMeta } from "../model/model";
 import { closeBook } from "../repo/repo";
-import serverManager from "../serverManager/serverManager";
+import serverManager from "../servermanager/server.manager";
 import { validate, IsNotEmpty, IsString, IsNumber } from "class-validator";
 
 class LineInput {
@@ -47,8 +47,7 @@ const set = async (req: Request, res: Response) => {
       Meta: {} as IMeta,
     };
     logger.info(`set key: ${key}, value: ${value}`);
-    const result = await service.setLine(line);
-    res.send({ status: 200, ...result });
+    res.send({ status: 200, ...(await service.setLine(line)) });
   } catch (err:any) {
     logger.error(err.message);
     res.statusCode = 400;
@@ -58,7 +57,7 @@ const set = async (req: Request, res: Response) => {
 
 const get = async (req: Request, res: Response) => {
   try {
-    const { key } = req.params;
+    const { key } = req.body;
     logger.info(`get key: ${key}`);
     const result = await service.getLine(key);
     res.send({ status: "OK", ...result });
@@ -73,7 +72,8 @@ const getAll = async (req: Request, res: Response) => {
   try {
     const result = await service.getAllLines();
     const page = await service.getPage();
-    res.send({ status: "OK", page,result });
+    logger.info(`getAll page: ${page}`);
+    res.send({ status: "OK", page, result });
   } catch (err:any) {
     logger.error(err.message);
     res.statusCode = 404;
@@ -91,13 +91,10 @@ const page = async (req: Request, res: Response) => {
     }
     logger.info(`page: ${page}`);
     await service.setPage(Number(page));
-    res.header("Content-Type", "application/json");
-    res.send({ status: "OK", page: page });
+    res.status(200).send({ status: "OK", page: page });
   } catch (err:any) {
     logger.error(err.message);
-    res.statusCode = 500;
-    res.header("Content-Type", "application/json");
-    res.send({ status: "ERROR", error: err.message });
+    res.status(400).send({ status: "ERROR", error: err.message });
   }
 };
 
@@ -105,11 +102,10 @@ const getPage = async (req: Request, res: Response) => {
   try {
     const page = await service.getPage();
     logger.info(`getPage: ${page}`);
-    res.send({ status: "OK", page });
+    res.status(200).send({ status: "OK", page });
   } catch (err:any) {
     logger.error(err.message);
-    res.statusCode = 500;
-    res.send({ status: "ERROR", error: err.message });
+    res.status(500).send({ status: "ERROR", error: err.message });
   }
 };
 
@@ -122,22 +118,25 @@ const flush = async (req: Request, res: Response) => {
     }
     const pagenumber = await service.getPage();
     logger.info(`flushed page: ${pagenumber}`);
-    res.send({ status: "OK", page, pagenumber });
+    res.status(200).send({ status: "OK", page, pagenumber });
   } catch (err: any) {
     logger.error(err.message);
-    res.statusCode = 500;
-    res.send({ status: "ERROR", error: err.message });
+    res.status(500).send({ status: "ERROR", error: err.message });
   }
 };
 
 const ping = async (req: Request, res: Response) => {
   logger.info(`pong`);
-  res.send(`pong`);
+  res.status(200).send({status: "OK", ping: "pong"});
 };
 
+const health = async (req: Request, res: Response) => {
+  logger.info(`health`);
+  res.status(200).send({status: "OK"});
+};
 const close = async (req: Request, res: Response) => {
   try {
-    await closeBook();
+    closeBook();
     res.send({ status: "OK" });
     serverManager.closeServer();
   } catch (err:any) {
@@ -156,5 +155,6 @@ const Controller = {
   getPage,
   flush,
   close,
+  health,
 };
 export default Controller;

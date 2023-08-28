@@ -1,4 +1,4 @@
-import startServer from "./serverManager/serverManager"
+import startServer from "./servermanager/server.manager"
 
 
 startServer.startServer();
