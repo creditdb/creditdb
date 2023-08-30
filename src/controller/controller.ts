@@ -6,7 +6,7 @@ import Service from "../service/service";
 import { ILine, IMeta } from "../model/model";
 import { closeBook } from "../repo/repo";
 import serverManager from "../servermanager/server.manager";
-import { validate, IsNotEmpty, IsString, IsNumber } from "class-validator";
+import { validate, IsNotEmpty, IsString, IsNumber, IsInt, Min } from "class-validator";
 
 class LineInput {
   @IsNotEmpty()
@@ -26,6 +26,8 @@ class LineInput {
 class PageInput {
   @IsNotEmpty()
   @IsNumber()
+  @Min(0)
+  @IsInt()
   page: number;
 
   constructor(page: number) {
