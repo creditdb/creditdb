@@ -105,7 +105,6 @@ const del = async (req: Request, res: Response, service: Service) => {
 
 const getAll = async (req: Request, res: Response, service: Service) => {
   try {
-    
     const { page } = req.body;
     const pageInput = new PageInput(page);
     const pageErrors = await validate(pageInput);
@@ -126,7 +125,6 @@ const getAll = async (req: Request, res: Response, service: Service) => {
 
 const flush = async (req: Request, res: Response, service: Service) => {
   try {
-
     const { page } = req.body;
     const pageInput = new PageInput(page);
     const pageErrors = await validate(pageInput);
