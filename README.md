@@ -5,7 +5,7 @@ Engine for [CreditDB](https://github.com/creditdb), a fast and efficient key-val
 ## Installation
 
 ```sh
-git clone "https://github.com/creditdb/creditdb.git"
+git clone https://github.com/creditdb/creditdb.git
 ```
 
 ## Usage
