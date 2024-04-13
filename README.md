@@ -4,17 +4,20 @@ Engine for [CreditDB](https://github.com/creditdb), a fast and efficient key-val
 
 ## Installation
 
+Clone the repo from github:
+
 ```sh
 git clone https://github.com/creditdb/creditdb.git
 ```
 
-## Usage
-
 Install dependencies:
 
 ```sh
+cd creditdb
 npm install
 ```
+
+## Usage
 
 Run the application:
 ```sh
